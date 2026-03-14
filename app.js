@@ -7,7 +7,7 @@ const state = {
   morphs: [],
   enrichedWords: [],
   filteredWords: [],
-  viewMode: "card", // 'card' | 'list' | 'flip'
+  viewMode: "card", // 'card' | 'list' | 'flip'；頁面載入時為字卡模式
   searchText: "",
   filters: {
     language: [],
@@ -15,8 +15,8 @@ const state = {
     category: [],
   },
   currentCardIndex: 0,
-  showSyllablesOnCard: true,
-  showMorphsOnCard: false,
+  showSyllablesOnCard: false, // 頁面載入時為非音節
+  showMorphsOnCard: false,     // 頁面載入時為非構詞
   flipDefaultSide: "word", // 'word' | 'meaning'
   flipIsBack: false,
 };
@@ -365,6 +365,25 @@ function renderCard() {
 
   const hasSyllables = syllables.length > 0 && state.showSyllablesOnCard;
 
+  // 依 token_position 分組，取得每個 token 的文字（供非音節模式同一 token 不換行使用）
+  function getTokenTextsFromSyllables(syls) {
+    if (!syls || !syls.length) return [];
+    const groups = [];
+    let current = [];
+    let currentPos = null;
+    for (const s of syls) {
+      const tokenPos = Number(s.token_position || 1);
+      if (currentPos !== null && currentPos !== tokenPos) {
+        groups.push(current.join(""));
+        current = [];
+      }
+      currentPos = tokenPos;
+      current.push(s.syllable || s.form || "");
+    }
+    if (current.length) groups.push(current.join(""));
+    return groups;
+  }
+
   // 基礎「族語」顯示（會套用詞構 / 音節）
   let baseWordHtml;
 
@@ -395,12 +414,58 @@ function renderCard() {
       }
     }
 
-    baseWordHtml = pieces
-      .map(
-        (p) =>
-          `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
-      )
-      .join("");
+    const tokenTexts = getTokenTextsFromSyllables(syllables);
+    if (tokenTexts.length > 0) {
+      // 依 token 邊界切分 pieces，同一 token_position 包成一個 word-token
+      const tokenLengths = tokenTexts.map((t) => t.length);
+      const tokenPiecesList = [];
+      let pieceIdx = 0;
+      let charInPiece = 0;
+      for (const len of tokenLengths) {
+        let taken = 0;
+        const tokenPieces = [];
+        while (taken < len && pieceIdx < pieces.length) {
+          const p = pieces[pieceIdx];
+          const rest = p.text.length - charInPiece;
+          const need = len - taken;
+          if (rest <= need) {
+            tokenPieces.push({
+              text: p.text.slice(charInPiece),
+              type: p.type,
+            });
+            taken += rest;
+            pieceIdx++;
+            charInPiece = 0;
+          } else {
+            tokenPieces.push({
+              text: p.text.slice(charInPiece, charInPiece + need),
+              type: p.type,
+            });
+            taken += need;
+            charInPiece += need;
+          }
+        }
+        tokenPiecesList.push(tokenPieces);
+      }
+      baseWordHtml = tokenPiecesList
+        .map(
+          (tps) =>
+            `<span class="word-token">${tps
+              .map(
+                (p) =>
+                  `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
+              )
+              .join("")}</span>`
+        )
+        .join(" ");
+    } else {
+      baseWordHtml = `<span class="word-token">${pieces
+        .map(
+          (p) =>
+            `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
+        )
+        .join("")}</span>`;
+    }
   } else if (hasSyllables && syllables.length) {
     // 音節顯示僅依 token_position、position 與 syllable（或 form），不使用 normalized
     // 相同 token_position 包成 syllable-token，不換行
@@ -429,7 +494,14 @@ function renderCard() {
 
     baseWordHtml = tokenGroups.join(" ");
   } else {
-    baseWordHtml = word.display_word || word.word || "—";
+    const tokenTexts = getTokenTextsFromSyllables(syllables);
+    if (tokenTexts.length > 0) {
+      baseWordHtml = tokenTexts
+        .map((t) => `<span class="word-token">${t}</span>`)
+        .join(" ");
+    } else {
+      baseWordHtml = `<span class="word-token">${word.display_word || word.word || "—"}</span>`;
+    }
   }
 
   // 翻牌模式：只顯示一面（族語或華語），族語面仍套用詞構 / 音節
