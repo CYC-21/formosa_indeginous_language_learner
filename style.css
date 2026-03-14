@@ -154,7 +154,7 @@ body {
   background: rgba(242, 242, 242, 0.12);
   color: var(--color-text-on-dark);
   outline: none;
-  font-size: 0.9rem;
+  font-size: 1rem; /* 至少 16px，避免 iOS 聚焦輸入框時自動放大 */
 }
 
 .text-input::placeholder {
