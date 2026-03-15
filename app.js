@@ -365,6 +365,13 @@ function renderCard() {
 
   const hasSyllables = syllables.length > 0 && state.showSyllablesOnCard;
 
+  // 單一 token 字數 > 8 時，每多一字縮小 5%（不與 token 換行規則衝突）
+  function getTokenScale(charCount) {
+    if (charCount <= 8) return 1;
+    const scale = 1 - (charCount - 8) * 0.05;
+    return Math.max(0.5, scale);
+  }
+
   // 依 token_position 分組，取得每個 token 的文字（供非音節模式同一 token 不換行使用）
   function getTokenTextsFromSyllables(syls) {
     if (!syls || !syls.length) return [];
@@ -449,8 +456,8 @@ function renderCard() {
       }
       baseWordHtml = tokenPiecesList
         .map(
-          (tps) =>
-            `<span class="word-token">${tps
+          (tps, i) =>
+            `<span class="word-token" style="--token-scale: ${getTokenScale(tokenLengths[i])}">${tps
               .map(
                 (p) =>
                   `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
@@ -459,7 +466,8 @@ function renderCard() {
         )
         .join(" ");
     } else {
-      baseWordHtml = `<span class="word-token">${pieces
+      const singleLen = pieces.reduce((s, p) => s + p.text.length, 0);
+      baseWordHtml = `<span class="word-token" style="--token-scale: ${getTokenScale(singleLen)}">${pieces
         .map(
           (p) =>
             `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
@@ -471,36 +479,44 @@ function renderCard() {
     // 相同 token_position 包成 syllable-token，不換行
     const tokenGroups = [];
     let currentToken = [];
+    let currentTokenLen = 0;
     let currentPos = null;
 
     for (const s of syllables) {
       const tokenPos = Number(s.token_position || 1);
       if (currentPos !== null && currentPos !== tokenPos) {
-        tokenGroups.push(
-          `<span class="syllable-token">${currentToken.join("")}</span>`
-        );
+        tokenGroups.push({
+          html: `<span class="syllable-token" style="--token-scale: ${getTokenScale(currentTokenLen)}">${currentToken.join("")}</span>`,
+        });
         currentToken = [];
+        currentTokenLen = 0;
       }
       currentPos = tokenPos;
+      const sy = s.syllable || s.form || "";
+      currentTokenLen += sy.length;
       currentToken.push(
-        `<span class="syllable-inline">${s.syllable || s.form || ""}</span>`
+        `<span class="syllable-inline">${sy}</span>`
       );
     }
     if (currentToken && currentToken.length) {
-      tokenGroups.push(
-        `<span class="syllable-token">${currentToken.join("")}</span>`
-      );
+      tokenGroups.push({
+        html: `<span class="syllable-token" style="--token-scale: ${getTokenScale(currentTokenLen)}">${currentToken.join("")}</span>`,
+      });
     }
 
-    baseWordHtml = tokenGroups.join(" ");
+    baseWordHtml = tokenGroups.map((g) => g.html).join(" ");
   } else {
     const tokenTexts = getTokenTextsFromSyllables(syllables);
     if (tokenTexts.length > 0) {
       baseWordHtml = tokenTexts
-        .map((t) => `<span class="word-token">${t}</span>`)
+        .map(
+          (t) =>
+            `<span class="word-token" style="--token-scale: ${getTokenScale(t.length)}">${t}</span>`
+        )
         .join(" ");
     } else {
-      baseWordHtml = `<span class="word-token">${word.display_word || word.word || "—"}</span>`;
+      const raw = word.display_word || word.word || "—";
+      baseWordHtml = `<span class="word-token" style="--token-scale: ${getTokenScale(raw.length)}">${raw}</span>`;
     }
   }
 
@@ -532,6 +548,17 @@ function renderCard() {
   }
 
   const wordContentHtml = baseWordHtml;
+  const notesText = (word.notes && String(word.notes).trim()) || "";
+  const synonymsText = (word.synonyms && String(word.synonyms).trim()) || "";
+  const notesSymbol = notesText ? "▾" : "▿";
+  const esc = (s) => {
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  };
 
   cardEl.innerHTML = `
     <div class="word-card__body">
@@ -539,23 +566,40 @@ function renderCard() {
         <div class="word-card__word">${wordContentHtml}</div>
       </div>
       <div class="word-card__meaning">${word.meaning_short || "—"}</div>
-      <div class="word-card__meta" aria-label="語言、級別、分類">
-        ${
-          languageLabel
-            ? `<span class="meta-pill">${languageLabel}</span>`
-            : ""
-        }
-        ${
-          levelLabel ? `<span class="meta-pill">${levelLabel}</span>` : ""
-        }
-        ${
-          categoryLabel
-            ? `<span class="meta-pill">${categoryLabel}</span>`
-            : ""
-        }
+      <div class="word-card__notes is-collapsed" aria-hidden="true">
+        <div class="word-card__notes-content">${esc(word.notes || "")}</div>
+      </div>
+      <div class="word-card__synonyms">${synonymsText ? "同義詞：" + esc(synonymsText) : ""}</div>
+      <div class="word-card__footer">
+        <div class="word-card__meta" aria-label="語言、級別、分類">
+          ${
+            languageLabel
+              ? `<span class="meta-pill">${languageLabel}</span>`
+              : ""
+          }
+          ${
+            levelLabel ? `<span class="meta-pill">${levelLabel}</span>` : ""
+          }
+          ${
+            categoryLabel
+              ? `<span class="meta-pill">${categoryLabel}</span>`
+              : ""
+          }
+        </div>
+        <button type="button" class="word-card__notes-toggle${notesText ? " word-card__notes-toggle--has-notes" : ""}" ${notesText ? "" : "disabled"} aria-expanded="false" aria-label="展開註解">${notesSymbol}</button>
       </div>
     </div>
   `;
+
+  const notesBlock = cardEl.querySelector(".word-card__notes");
+  const notesToggle = cardEl.querySelector(".word-card__notes-toggle");
+  if (notesToggle && notesBlock && notesText) {
+    notesToggle.addEventListener("click", () => {
+      const collapsed = notesBlock.classList.toggle("is-collapsed");
+      notesToggle.setAttribute("aria-expanded", (!collapsed).toString());
+      notesBlock.setAttribute("aria-hidden", collapsed.toString());
+    });
+  }
 
   cardIndexLabelEl.textContent = `${state.currentCardIndex + 1} / ${
     list.length
@@ -566,10 +610,19 @@ function renderTable() {
   const list = state.filteredWords;
   wordTableBodyEl.innerHTML = "";
 
+  const esc = (s) => {
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  };
+
   if (!list.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 4;
+    td.colSpan = 5;
     td.textContent = "目前沒有符合條件的單字。";
     td.style.textAlign = "center";
     tr.appendChild(td);
@@ -578,20 +631,37 @@ function renderTable() {
   }
 
   for (const w of list) {
-    const tr = document.createElement("tr");
-    const languageLabel =
-      (w._tagGroups.language?.[0]?.tag_label || w.language) ?? "";
-    const levelLabel =
-      (w._tagGroups.level?.[0]?.tag_label || w.level) ?? "";
+    const synonymsText = (w.synonyms && String(w.synonyms).trim()) || "";
+    const notesText = (w.notes && String(w.notes).trim()) || "";
+    const hasAny = synonymsText || notesText;
+    const symbol = hasAny ? "▾" : "▿";
 
-    tr.innerHTML = `
+    let languageLabel =
+      (w._tagGroups.language?.[0]?.tag_label || w.language) ?? "";
+    let levelLabel =
+      (w._tagGroups.level?.[0]?.tag_label || w.level) ?? "";
+    languageLabel = String(languageLabel).replace(/阿美/g, "");
+    levelLabel = String(levelLabel).replace(/級/g, "");
+
+    const mainTr = document.createElement("tr");
+    mainTr.innerHTML = `
       <td>${w.word || w.display_word || ""}</td>
       <td>${w.meaning_short || ""}</td>
       <td>${languageLabel}</td>
       <td>${levelLabel}</td>
+      <td class="word-table__toggle-cell">
+        <button type="button" class="word-table__toggle${hasAny ? " word-table__toggle--has-notes" : ""}" ${hasAny ? "" : "disabled"} aria-expanded="false" aria-label="展開同義詞與註解">${symbol}</button>
+      </td>
     `;
+    wordTableBodyEl.appendChild(mainTr);
 
-    wordTableBodyEl.appendChild(tr);
+    const detailTr = document.createElement("tr");
+    detailTr.className = "word-table__detail-row is-collapsed";
+    const lines = [];
+    if (synonymsText) lines.push(`同義詞：${esc(synonymsText)}`);
+    if (notesText) lines.push(`註解：${esc(notesText)}`);
+    detailTr.innerHTML = `<td colspan="5" class="word-table__detail-cell"><div class="word-table__detail-content">${lines.map((line) => `<div>${line}</div>`).join("")}</div></td>`;
+    wordTableBodyEl.appendChild(detailTr);
   }
 }
 
@@ -651,6 +721,19 @@ searchInput.addEventListener("input", (e) => {
   state.searchText = e.target.value;
   applyFiltersAndSearch();
 });
+
+if (wordTableBodyEl) {
+  wordTableBodyEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".word-table__toggle:not(:disabled)");
+    if (!btn) return;
+    const row = btn.closest("tr");
+    const detailRow = row && row.nextElementSibling;
+    if (detailRow && detailRow.classList.contains("word-table__detail-row")) {
+      const collapsed = detailRow.classList.toggle("is-collapsed");
+      btn.setAttribute("aria-expanded", (!collapsed).toString());
+    }
+  });
+}
 
 if (viewModeSelect) {
   viewModeSelect.addEventListener("change", (e) => {
