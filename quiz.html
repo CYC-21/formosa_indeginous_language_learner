@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html class="page-index" lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>族語小幫手｜Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&family=Noto+Sans+TC:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <button
+        class="header-hamburger"
+        type="button"
+        aria-label="開啟選單"
+        aria-expanded="false"
+        aria-controls="navDrawer"
+        id="navHamburger"
+      >
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div class="app-header__title">
+        <span class="app-title">族語單字小幫手</span>
+      </div>
+    </header>
+    <div id="navDrawer" class="nav-drawer" aria-hidden="true">
+      <div class="nav-drawer__backdrop" id="navDrawerBackdrop" aria-hidden="true"></div>
+      <nav class="nav-drawer__panel" aria-label="主要導覽">
+        <a href="index.html">首頁</a>
+        <a href="vocabulary.html">所有單字</a>
+        <a href="saved.html">我的單字</a>
+        <a href="quiz.html" class="is-current">單字測驗</a>
+        <a href="settings.html">設定</a>
+      </nav>
+    </div>
+
+    <main class="app-main">
+      <!-- 階段一：設定 -->
+      <section id="quizSetup" class="quiz-section">
+        <h2 class="section-title">測驗設定</h2>
+        <div class="quiz-setup__fields">
+          <label class="field">
+            <span class="field-label">題數</span>
+            <select id="quizCount" class="select-input">
+              <option value="5">5 題</option>
+              <option value="10" selected>10 題</option>
+              <option value="15">15 題</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">題庫</span>
+            <select id="quizSource" class="select-input">
+              <option value="all">全部單字</option>
+              <option value="saved">我的單字</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">語言別</span>
+            <select id="quizFilterLanguage" class="select-input">
+              <option value="">全部</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">級別</span>
+            <select id="quizFilterLevel" class="select-input">
+              <option value="">全部</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">分類</span>
+            <select id="quizFilterCategory" class="select-input">
+              <option value="">全部</option>
+            </select>
+          </label>
+        </div>
+        <div class="quiz-setup__actions">
+          <button type="button" id="quizStartBtn" class="quiz-btn quiz-btn--primary">開始測驗</button>
+        </div>
+      </section>
+
+      <!-- 階段二：測驗中 -->
+      <section id="quizRun" class="quiz-section is-hidden">
+        <div class="quiz-progress" aria-live="polite">
+          <span id="quizProgressText">第 1 / 10 題</span>
+        </div>
+        <div class="quiz-question" id="quizQuestionBlock">
+          <div class="quiz-question-card">
+            <p class="quiz-question-card__prompt" id="quizPrompt"></p>
+          </div>
+          <!-- 選擇題：選項區 -->
+          <div id="quizOptions" class="quiz-options is-hidden">
+            <button type="button" class="quiz-option" data-value=""></button>
+          </div>
+          <div id="quizConfirmWrap" class="quiz-confirm-wrap is-hidden">
+            <button type="button" id="quizConfirmBtn" class="quiz-btn quiz-btn--primary" disabled>確認</button>
+          </div>
+        </div>
+        <p id="quizFeedback" class="quiz-feedback is-hidden" aria-live="polite"></p>
+        <div id="quizNextWrap" class="quiz-next-wrap is-hidden">
+          <button type="button" id="quizNextBtn" class="quiz-btn quiz-btn--primary">下一題</button>
+        </div>
+      </section>
+
+      <!-- 階段三：結果 -->
+      <section id="quizResult" class="quiz-section is-hidden">
+        <h2 class="section-title">測驗結果</h2>
+        <p class="quiz-result__score" id="quizScoreText"></p>
+        <div id="quizResultList" class="quiz-result-list" aria-label="本次題目與解答"></div>
+        <div class="quiz-result__actions">
+          <button type="button" id="quizAgainBtn" class="quiz-btn quiz-btn--primary">再測一次</button>
+          <a href="index.html" class="quiz-btn quiz-btn--secondary">返回首頁</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>版本：2.0</span>
+      <span aria-hidden="true">｜</span>
+      <a href="index.html" class="app-footer__link">首頁</a>
+      <span aria-hidden="true">｜</span>
+      <a href="about.html" class="app-footer__link">關於族語單字小幫手</a>
+    </footer>
+
+    <script src="js/nav.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/quiz.js"></script>
+  </body>
+</html>

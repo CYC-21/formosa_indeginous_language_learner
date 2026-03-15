@@ -1,3 +1,8 @@
+/*
+  複製來源：ver 1.0/app.js
+  複製日期：2026-03-13
+  用途：根目錄「查看單字」頁 (vocabulary.html) 專用；v1.0 原始檔凍結於 ver 1.0/。此檔可擴充（如收藏），不刪改既有 v1.0 邏輯。
+*/
 
 // 基本前端 state
 const state = {
@@ -46,10 +51,13 @@ const flipDefaultsEl = document.getElementById("flipDefaults");
 const flipDefaultSelect = document.getElementById("flipDefaultSelect");
 
 function setStatus(message, isError = false) {
-  statusBarEl.textContent = message || "";
-  statusBarEl.style.color = isError ? "#f97373" : "#9ca3af";
+  if (statusBarEl) {
+    statusBarEl.textContent = message || "";
+    statusBarEl.style.color = isError ? "#f97373" : "#9ca3af";
+  }
 }
 
+/** 載入四個 JSON（單字、標籤、音節、構詞），enrich 後套用篩選；我的單字頁會再依本機 localStorage 的收藏篩選 */
 async function loadData() {
   try {
     setStatus("載入資料中…");
@@ -70,11 +78,16 @@ async function loadData() {
       morphsRes.ok ? morphsRes.json() : Promise.resolve([]),
     ]);
 
-    state.words = words;
-    state.tags = tags;
-    state.syllables = syllables;
-    state.morphs = morphs;
+    state.words = words || [];
+    state.tags = tags || [];
+    state.syllables = syllables || [];
+    state.morphs = morphs || [];
     enrichWords();
+    var defaultFilter = typeof getDefaultFilter !== "undefined" ? getDefaultFilter() : null;
+    if (defaultFilter) {
+      if (defaultFilter.language && defaultFilter.language.length) state.filters.language = defaultFilter.language.slice();
+      if (defaultFilter.level && defaultFilter.level.length) state.filters.level = defaultFilter.level.slice();
+    }
     buildFilterDropdowns();
     applyFiltersAndSearch();
     setStatus("資料載入完成。");
@@ -217,13 +230,22 @@ function buildFilterDropdowns() {
 }
 
 function applyFiltersAndSearch() {
+  // 基底：我的單字頁＝僅收藏；查看單字頁＝全部
+  let base = state.enrichedWords;
+  if (document.body.classList.contains("page-saved")) {
+    const savedIds = typeof getSavedWords !== "undefined" ? getSavedWords() : [];
+    const savedSet = new Set(savedIds.map((x) => String(x)));
+    base = base.filter((w) => savedSet.has(String(w.id)));
+  }
+  base = base.filter((w) => w.published === "TRUE");
+
   const search = state.searchText.trim().toLowerCase();
   const { language, level, category } = state.filters;
   const langArr = Array.isArray(language) ? language : language ? [language] : [];
   const levelArr = Array.isArray(level) ? level : level ? [level] : [];
   const catArr = Array.isArray(category) ? category : category ? [category] : [];
 
-  let result = state.enrichedWords.filter((w) => {
+  let result = base.filter((w) => {
     if (langArr.length > 0) {
       const hasLanguage =
         langArr.includes(w.language) ||
@@ -277,6 +299,7 @@ function applyFiltersAndSearch() {
 }
 
 function renderSummary() {
+  if (!summaryCountEl) return;
   const total = state.filteredWords.length;
   summaryCountEl.textContent = `共 ${total} 筆單字`;
 
@@ -323,6 +346,7 @@ function renderSummary() {
 }
 
 function renderCard() {
+  if (!cardEl) return;
   const list = state.filteredWords;
 
   if (!list.length) {
@@ -334,7 +358,7 @@ function renderCard() {
         </p>
       </div>
     `;
-    cardIndexLabelEl.textContent = "";
+    if (cardIndexLabelEl) cardIndexLabelEl.textContent = "";
     return;
   }
 
@@ -520,6 +544,11 @@ function renderCard() {
     }
   }
 
+  const saved = typeof isSavedWord !== "undefined" && isSavedWord(word.id);
+  const starChar = saved ? "★" : "☆";
+  const starLabel = saved ? "取消收藏" : "收藏";
+  const starWrap = `<div class="word-card__star-wrap"><button type="button" class="word-card__star" data-word-id="${word.id}" aria-label="${starLabel}" aria-pressed="${saved}">${starChar}</button></div>`;
+
   // 翻牌模式：只顯示一面（族語或華語），族語面仍套用詞構 / 音節
   if (state.viewMode === "flip") {
     const displayMeaning = word.meaning_short || "—";
@@ -535,15 +564,14 @@ function renderCard() {
 
     cardEl.innerHTML = `
       <div class="word-card__body">
+        ${starWrap}
         <div class="word-card__top">
           <div class="word-card__word">${mainHtml}</div>
         </div>
       </div>
     `;
 
-    cardIndexLabelEl.textContent = `${state.currentCardIndex + 1} / ${
-      list.length
-    }`;
+    if (cardIndexLabelEl) cardIndexLabelEl.textContent = `${state.currentCardIndex + 1} / ${list.length}`;
     return;
   }
 
@@ -562,6 +590,7 @@ function renderCard() {
 
   cardEl.innerHTML = `
     <div class="word-card__body">
+      ${starWrap}
       <div class="word-card__top">
         <div class="word-card__word">${wordContentHtml}</div>
       </div>
@@ -601,12 +630,11 @@ function renderCard() {
     });
   }
 
-  cardIndexLabelEl.textContent = `${state.currentCardIndex + 1} / ${
-    list.length
-  }`;
+  if (cardIndexLabelEl) cardIndexLabelEl.textContent = `${state.currentCardIndex + 1} / ${list.length}`;
 }
 
 function renderTable() {
+  if (!wordTableBodyEl) return;
   const list = state.filteredWords;
   wordTableBodyEl.innerHTML = "";
 
@@ -622,7 +650,7 @@ function renderTable() {
   if (!list.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 5;
+    td.colSpan = 6;
     td.textContent = "目前沒有符合條件的單字。";
     td.style.textAlign = "center";
     tr.appendChild(td);
@@ -635,6 +663,9 @@ function renderTable() {
     const notesText = (w.notes && String(w.notes).trim()) || "";
     const hasAny = synonymsText || notesText;
     const symbol = hasAny ? "▾" : "▿";
+    const rowSaved = typeof isSavedWord !== "undefined" && isSavedWord(w.id);
+    const rowStarChar = rowSaved ? "★" : "☆";
+    const rowStarLabel = rowSaved ? "取消收藏" : "收藏";
 
     let languageLabel =
       (w._tagGroups.language?.[0]?.tag_label || w.language) ?? "";
@@ -645,6 +676,9 @@ function renderTable() {
 
     const mainTr = document.createElement("tr");
     mainTr.innerHTML = `
+      <td class="word-table__star-cell">
+        <button type="button" class="word-table__star" data-word-id="${w.id}" aria-label="${rowStarLabel}" aria-pressed="${rowSaved}">${rowStarChar}</button>
+      </td>
       <td>${w.word || w.display_word || ""}</td>
       <td>${w.meaning_short || ""}</td>
       <td>${languageLabel}</td>
@@ -660,12 +694,13 @@ function renderTable() {
     const lines = [];
     if (synonymsText) lines.push(`同義詞：${esc(synonymsText)}`);
     if (notesText) lines.push(`註解：${esc(notesText)}`);
-    detailTr.innerHTML = `<td colspan="5" class="word-table__detail-cell"><div class="word-table__detail-content">${lines.map((line) => `<div>${line}</div>`).join("")}</div></td>`;
+    detailTr.innerHTML = `<td colspan="6" class="word-table__detail-cell"><div class="word-table__detail-content">${lines.map((line) => `<div>${line}</div>`).join("")}</div></td>`;
     wordTableBodyEl.appendChild(detailTr);
   }
 }
 
 function updateCardControls() {
+  if (!prevCardBtn || !nextCardBtn || !randomCardBtn) return;
   const count = state.filteredWords.length;
   const disabled = count === 0;
   prevCardBtn.disabled = disabled || count <= 1;
@@ -679,27 +714,32 @@ function updateCardControls() {
       !toggleAnswerBtn.disabled && state.flipIsBack
     );
   }
-  toggleSyllableBtn.disabled = disabled || !state.syllables.length;
-  toggleMorphBtn.disabled = disabled || !state.morphs.length;
-
-  toggleSyllableBtn.classList.toggle(
-    "is-on",
-    !toggleSyllableBtn.disabled && state.showSyllablesOnCard
-  );
-  toggleMorphBtn.classList.toggle(
-    "is-on",
-    !toggleMorphBtn.disabled && state.showMorphsOnCard
-  );
+  if (toggleSyllableBtn) {
+    toggleSyllableBtn.disabled = disabled || !state.syllables.length;
+    toggleSyllableBtn.classList.toggle(
+      "is-on",
+      !toggleSyllableBtn.disabled && state.showSyllablesOnCard
+    );
+  }
+  if (toggleMorphBtn) {
+    toggleMorphBtn.disabled = disabled || !state.morphs.length;
+    toggleMorphBtn.classList.toggle(
+      "is-on",
+      !toggleMorphBtn.disabled && state.showMorphsOnCard
+    );
+  }
 }
 
 function setViewMode(mode) {
   state.viewMode = mode;
-  if (mode === "card" || mode === "flip") {
-    cardViewEl.classList.remove("is-hidden");
-    listViewEl.classList.add("is-hidden");
-  } else {
-    cardViewEl.classList.add("is-hidden");
-    listViewEl.classList.remove("is-hidden");
+  if (cardViewEl && listViewEl) {
+    if (mode === "card" || mode === "flip") {
+      cardViewEl.classList.remove("is-hidden");
+      listViewEl.classList.add("is-hidden");
+    } else {
+      cardViewEl.classList.add("is-hidden");
+      listViewEl.classList.remove("is-hidden");
+    }
   }
 
   if (viewModeSelect && viewModeSelect.value !== mode) {
@@ -716,14 +756,29 @@ function setViewMode(mode) {
   }
 }
 
-// 事件綁定
-searchInput.addEventListener("input", (e) => {
-  state.searchText = e.target.value;
-  applyFiltersAndSearch();
-});
+// 事件綁定（僅在 vocabulary 頁存在對應 DOM 時綁定）
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    state.searchText = e.target.value;
+    applyFiltersAndSearch();
+  });
+}
 
 if (wordTableBodyEl) {
   wordTableBodyEl.addEventListener("click", (e) => {
+    const starBtn = e.target.closest(".word-table__star");
+    if (starBtn && typeof toggleSavedWord !== "undefined") {
+      const id = starBtn.getAttribute("data-word-id");
+      if (id) {
+        toggleSavedWord(id);
+        if (document.body.classList.contains("page-saved")) {
+          applyFiltersAndSearch();
+        } else {
+          renderTable();
+        }
+      }
+      return;
+    }
     const btn = e.target.closest(".word-table__toggle:not(:disabled)");
     if (!btn) return;
     const row = btn.closest("tr");
@@ -747,46 +802,56 @@ if (viewModeSelect) {
   });
 }
 
-prevCardBtn.addEventListener("click", () => {
-  if (!state.filteredWords.length) return;
-  state.currentCardIndex =
-    (state.currentCardIndex - 1 + state.filteredWords.length) %
-    state.filteredWords.length;
-  renderCard();
-  updateCardControls();
-});
+if (prevCardBtn) {
+  prevCardBtn.addEventListener("click", () => {
+    if (!state.filteredWords.length) return;
+    state.currentCardIndex =
+      (state.currentCardIndex - 1 + state.filteredWords.length) %
+      state.filteredWords.length;
+    renderCard();
+    updateCardControls();
+  });
+}
 
-nextCardBtn.addEventListener("click", () => {
-  if (!state.filteredWords.length) return;
-  state.currentCardIndex =
-    (state.currentCardIndex + 1) % state.filteredWords.length;
-  renderCard();
-  updateCardControls();
-});
+if (nextCardBtn) {
+  nextCardBtn.addEventListener("click", () => {
+    if (!state.filteredWords.length) return;
+    state.currentCardIndex =
+      (state.currentCardIndex + 1) % state.filteredWords.length;
+    renderCard();
+    updateCardControls();
+  });
+}
 
-randomCardBtn.addEventListener("click", () => {
-  const len = state.filteredWords.length;
-  if (!len) return;
-  let index = Math.floor(Math.random() * len);
-  if (len > 1 && index === state.currentCardIndex) {
-    index = (index + 1) % len;
-  }
-  state.currentCardIndex = index;
-  renderCard();
-  updateCardControls();
-});
+if (randomCardBtn) {
+  randomCardBtn.addEventListener("click", () => {
+    const len = state.filteredWords.length;
+    if (!len) return;
+    let index = Math.floor(Math.random() * len);
+    if (len > 1 && index === state.currentCardIndex) {
+      index = (index + 1) % len;
+    }
+    state.currentCardIndex = index;
+    renderCard();
+    updateCardControls();
+  });
+}
 
-toggleSyllableBtn.addEventListener("click", () => {
-  state.showSyllablesOnCard = !state.showSyllablesOnCard;
-  renderCard();
-  updateCardControls();
-});
+if (toggleSyllableBtn) {
+  toggleSyllableBtn.addEventListener("click", () => {
+    state.showSyllablesOnCard = !state.showSyllablesOnCard;
+    renderCard();
+    updateCardControls();
+  });
+}
 
-toggleMorphBtn.addEventListener("click", () => {
-  state.showMorphsOnCard = !state.showMorphsOnCard;
-  renderCard();
-  updateCardControls();
-});
+if (toggleMorphBtn) {
+  toggleMorphBtn.addEventListener("click", () => {
+    state.showMorphsOnCard = !state.showMorphsOnCard;
+    renderCard();
+    updateCardControls();
+  });
+}
 
 if (toggleAnswerBtn) {
   toggleAnswerBtn.addEventListener("click", () => {
@@ -803,6 +868,21 @@ let cardTouchStartX = null;
 let cardTouchStartY = null;
 
 if (cardEl) {
+  cardEl.addEventListener("click", (e) => {
+    const starBtn = e.target.closest(".word-card__star");
+    if (starBtn && typeof toggleSavedWord !== "undefined") {
+      const id = starBtn.getAttribute("data-word-id");
+      if (id) {
+        toggleSavedWord(id);
+        if (document.body.classList.contains("page-saved")) {
+          applyFiltersAndSearch();
+        } else {
+          renderCard();
+          updateCardControls();
+        }
+      }
+    }
+  });
   cardEl.addEventListener(
     "touchstart",
     (e) => {
@@ -877,10 +957,12 @@ if (flipDefaultSelect) {
   });
 }
 
-searchToggleBtn.addEventListener("click", () => {
-  const collapsed = searchPanelEl.classList.toggle("is-collapsed");
-  searchToggleBtn.setAttribute("aria-expanded", (!collapsed).toString());
-});
+if (searchToggleBtn) {
+  searchToggleBtn.addEventListener("click", () => {
+    const collapsed = searchPanelEl.classList.toggle("is-collapsed");
+    searchToggleBtn.setAttribute("aria-expanded", (!collapsed).toString());
+  });
+}
 
 if (viewModeToggleBtn && viewModePanelEl) {
   viewModeToggleBtn.addEventListener("click", () => {
@@ -889,9 +971,25 @@ if (viewModeToggleBtn && viewModePanelEl) {
   });
 }
 
-// 初始化
+// 初始化：vocabulary 頁或我的單字頁
 document.addEventListener("DOMContentLoaded", () => {
+  const isVocabulary = document.getElementById("searchInput");
+  const isSavedPage = document.body.classList.contains("page-saved");
+  if (!isVocabulary && !isSavedPage) return;
   setViewMode("card");
-  loadData();
+  loadData().then(() => {
+    if (isSavedPage) return;
+    // 支援依 word_id 定位字卡：vocabulary.html?id=W0001（首頁今日單字「查看單字」）或 ?random=W0001
+    const params = new URLSearchParams(window.location.search);
+    const wordId = params.get("id") || params.get("random");
+    if (wordId && state.filteredWords.length) {
+      const idx = state.filteredWords.findIndex((w) => String(w.id) === String(wordId));
+      if (idx >= 0) {
+        state.currentCardIndex = idx;
+        renderCard();
+        renderTable();
+        updateCardControls();
+      }
+    }
+  });
 });
-

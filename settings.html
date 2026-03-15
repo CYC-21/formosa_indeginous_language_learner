@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html class="page-index" lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>族語小幫手｜設定</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&family=Noto+Sans+TC:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <button
+        class="header-hamburger"
+        type="button"
+        aria-label="開啟選單"
+        aria-expanded="false"
+        aria-controls="navDrawer"
+        id="navHamburger"
+      >
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div class="app-header__title">
+        <span class="app-title">族語單字小幫手</span>
+      </div>
+    </header>
+
+    <div id="navDrawer" class="nav-drawer" aria-hidden="true">
+      <div class="nav-drawer__backdrop" id="navDrawerBackdrop" aria-hidden="true"></div>
+      <nav class="nav-drawer__panel" aria-label="主要導覽">
+        <a href="index.html">首頁</a>
+        <a href="vocabulary.html">所有單字</a>
+        <a href="saved.html">我的單字</a>
+        <a href="quiz.html">單字測驗</a>
+        <a href="settings.html" class="is-current">設定</a>
+      </nav>
+    </div>
+
+    <main class="app-main settings-main">
+      <section class="settings-section" aria-labelledby="default-heading">
+        <h2 id="default-heading" class="section-title">全域預設篩選</h2>
+        <p class="settings-desc">各分頁（查看單字、我的單字、測驗）的篩選預設值。可選「語言別」「級別」。</p>
+        <div class="select-grid" aria-label="全域預設（可複選）">
+          <div class="field filter-dropdown" id="settingsDefaultLanguage" data-group="language">
+            <span class="field-label">語言別</span>
+            <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+            <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+          </div>
+          <div class="field filter-dropdown" id="settingsDefaultLevel" data-group="level">
+            <span class="field-label">級別</span>
+            <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+            <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button type="button" id="settingsSaveDefaultBtn" class="quiz-btn quiz-btn--primary">儲存全域預設</button>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="daily-heading">
+        <h2 id="daily-heading" class="section-title">今日單字設定</h2>
+        <p class="settings-desc">首頁「今日單字」的篩選範圍。未選擇語言/級別時，以全域預設為準。</p>
+        <div class="select-grid" aria-label="今日單字篩選（可複選）">
+          <div class="field filter-dropdown" id="settingsDailyLanguage" data-group="language">
+            <span class="field-label">語言別</span>
+            <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+            <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+          </div>
+          <div class="field filter-dropdown" id="settingsDailyLevel" data-group="level">
+            <span class="field-label">級別</span>
+            <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+            <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+          </div>
+          <div class="field filter-dropdown" id="settingsDailyCategory" data-group="category">
+            <span class="field-label">分類</span>
+            <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+            <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button type="button" id="settingsSaveDailyBtn" class="quiz-btn quiz-btn--primary">儲存今日單字設定</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>版本：2.0</span>
+      <span aria-hidden="true">｜</span>
+      <a href="index.html" class="app-footer__link">首頁</a>
+      <span aria-hidden="true">｜</span>
+      <a href="about.html" class="app-footer__link">關於族語單字小幫手</a>
+    </footer>
+
+    <script src="js/nav.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/settings.js"></script>
+  </body>
+</html>

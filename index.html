@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>族語小幫手｜單字學習示意頁</title>
+    <title>族語小幫手｜首頁</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,146 +11,262 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .home-section {
+        border-radius: 0.9rem;
+        border: 1px solid rgba(242, 242, 242, 0.35);
+        background: rgba(242, 242, 242, 0.08);
+        padding: 1rem 1rem 1.1rem;
+        margin-bottom: 0.9rem;
+      }
+      .home-daily-card {
+        border-radius: 0.8rem;
+        border: none;
+        padding: 1.8rem 1.4rem;
+        background: var(--color-surface);
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+        width: 100%;
+      }
+      .home-daily-card .word-card__word {
+        font-size: min(2.5rem, 12vw);
+        font-weight: 600;
+        color: var(--color-text-on-light);
+        font-family: "TASA Orbiter", "Noto Sans TC", sans-serif;
+      }
+      .home-daily-card .word-card__meaning {
+        font-size: 1.35rem;
+        color: var(--color-meaning);
+        font-weight: 600;
+      }
+      .home-daily-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        justify-content: center;
+        margin-top: 0.75rem;
+      }
+      .home-daily-actions a,
+      .home-daily-actions button {
+        display: inline-block;
+        padding: 0.55rem 1rem;
+        border-radius: 0.6rem;
+        border: 1px solid rgba(242, 198, 65, 0.9);
+        background: transparent;
+        color: var(--color-accent-yellow);
+        text-decoration: none;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+      .home-daily-actions a:hover,
+      .home-daily-actions button:hover {
+        background: rgba(242, 198, 65, 0.2);
+      }
+      .home-news-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.9rem;
+        color: rgba(242, 242, 242, 0.9);
+      }
+      .home-news-list li {
+        padding: 0.35rem 0;
+        border-bottom: 1px solid rgba(242, 242, 242, 0.12);
+      }
+      .home-news-list li:last-child {
+        border-bottom: none;
+      }
+    </style>
   </head>
   <body>
     <header class="app-header">
       <button
-        class="header-btn"
-        id="viewModeToggleBtn"
+        class="header-hamburger"
         type="button"
+        aria-label="開啟選單"
         aria-expanded="false"
-        aria-controls="viewModePanel"
+        aria-controls="navDrawer"
+        id="navHamburger"
       >
-        顯示
+        <span aria-hidden="true">☰</span>
       </button>
-
       <div class="app-header__title">
         <span class="app-title">族語單字小幫手</span>
       </div>
-
-      <button class="header-btn" id="searchToggleBtn" type="button" aria-expanded="false" aria-controls="searchPanel">
-        篩選
-      </button>
     </header>
 
+    <div id="navDrawer" class="nav-drawer" aria-hidden="true">
+      <div class="nav-drawer__backdrop" id="navDrawerBackdrop" aria-hidden="true"></div>
+      <nav class="nav-drawer__panel" aria-label="主要導覽">
+        <a href="index.html" class="is-current">首頁</a>
+        <a href="vocabulary.html">所有單字</a>
+        <a href="saved.html">我的單字</a>
+        <a href="quiz.html">單字測驗</a>
+        <a href="settings.html">設定</a>
+      </nav>
+    </div>
+
     <main class="app-main">
-      <section
-        id="viewModePanel"
-        class="view-mode-panel is-collapsed"
-        aria-label="顯示選擇（向下展開）"
-      >
-        <div class="view-mode-panel__inner">
-          <label class="field">
-            <span class="field-label">模式</span>
-            <select id="viewModeSelect" class="select-input">
-              <option value="card">字卡模式</option>
-              <option value="flip">翻牌模式</option>
-              <option value="list">列表模式</option>
-            </select>
-          </label>
+      <section class="home-section" aria-labelledby="daily-heading">
+        <h2 id="daily-heading" class="section-title">每日一字</h2>
+        <div id="dailyWordBlock" class="home-daily-card word-card word-card--empty">
+          <p class="word-card__placeholder" id="dailyWordText">載入中…</p>
+          <p class="word-card__meaning" id="dailyMeaningText" style="display: none;"></p>
+        </div>
+        <div class="home-daily-actions">
+          <button type="button" id="dailyCollectBtn" class="is-hidden">收藏</button>
+          <a href="vocabulary.html" id="dailyViewLink" class="is-hidden">查看單字</a>
+          <button type="button" id="dailyRandomBtn" class="is-hidden">再抽一個</button>
         </div>
       </section>
 
-      <section id="searchPanel" class="search-panel is-collapsed" aria-label="搜尋與篩選（向下展開）">
-        <div class="search-panel__inner">
-          <label class="field">
-            <span class="field-label">關鍵字搜尋</span>
-            <input
-              id="searchInput"
-              type="search"
-              class="text-input"
-              placeholder="輸入：族語／華語"
-              autocomplete="off"
-            />
-          </label>
-
-          <div class="select-grid" aria-label="標籤篩選（下拉可多選）">
-            <div class="field filter-dropdown" id="dropdownLanguage" data-group="language">
-              <span class="field-label">語言（可複選）</span>
-              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
-              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
-            </div>
-            <div class="field filter-dropdown" id="dropdownLevel" data-group="level">
-              <span class="field-label">級別（可複選）</span>
-              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
-              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
-            </div>
-            <div class="field filter-dropdown" id="dropdownCategory" data-group="category">
-              <span class="field-label">分類（可複選）</span>
-              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
-              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="content-panel" aria-live="polite">
-        <div id="summaryBar" class="summary-bar">
-          <span id="summaryCount">共 0 筆單字</span>
-          <span id="summaryFilters" class="summary-filters"></span>
-        </div>
-
-        <div id="cardView" class="card-view">
-          <div id="card" class="word-card word-card--empty">
-            <div class="word-card__body">
-              <p class="word-card__placeholder">請輸入搜尋或調整篩選條件。</p>
-            </div>
-          </div>
-          <div class="card-controls">
-            <div class="card-controls__row card-controls__row--nav">
-              <button id="prevCardBtn" class="nav-arrow" disabled aria-label="上一張">◀</button>
-              <button id="randomCardBtn" class="nav-action" disabled>隨機</button>
-              <button id="nextCardBtn" class="nav-arrow" disabled aria-label="下一張">▶</button>
-            </div>
-            <div class="card-controls__row card-controls__row--toggles">
-              <button id="toggleAnswerBtn" class="nav-action nav-action--secondary" disabled>答案</button>
-              <button id="toggleMorphBtn" class="nav-action nav-action--secondary" disabled>構詞</button>
-              <button id="toggleSyllableBtn" class="nav-action nav-action--secondary" disabled>音節</button>
-            </div>
-            <span id="cardIndexLabel" class="card-index-label"></span>
-          </div>
-
-          <div id="flipDefaults" class="flip-defaults is-hidden">
-            <label class="field">
-              <span class="field-label">翻面預設顯示</span>
-              <select id="flipDefaultSelect" class="select-input">
-                <option value="word">族語</option>
-                <option value="meaning">華語</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <div id="listView" class="list-view is-hidden">
-          <div class="table-wrapper">
-            <table class="word-table">
-              <thead>
-                <tr>
-                  <th>單字</th>
-                  <th>詞義</th>
-                  <th>語言</th>
-                  <th>級別</th>
-                  <th aria-label="展開同義詞與註解"></th>
-                </tr>
-              </thead>
-              <tbody id="wordTableBody">
-                <!-- 動態插入資料列 -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="statusBar" class="status-bar" aria-live="polite"></div>
+      <section class="home-section" aria-labelledby="news-heading">
+        <h2 id="news-heading" class="section-title">更新訊息</h2>
+        <ul class="home-news-list" id="newsList">
+          <li>載入中…</li>
+        </ul>
       </section>
     </main>
 
     <footer class="app-footer">
-      <span>版本：1.0</span>
+      <span>版本：2.0</span>
+      <span aria-hidden="true">｜</span>
+      <a href="index.html" class="app-footer__link">首頁</a>
       <span aria-hidden="true">｜</span>
       <a href="about.html" class="app-footer__link">關於族語單字小幫手</a>
     </footer>
 
-    <script src="app.js"></script>
-  </body>
-  </html>
+    <script src="js/storage.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      (function () {
+        const dailyWordBlock = document.getElementById("dailyWordBlock");
+        const dailyWordText = document.getElementById("dailyWordText");
+        const dailyMeaningText = document.getElementById("dailyMeaningText");
+        const dailyCollectBtn = document.getElementById("dailyCollectBtn");
+        const dailyViewLink = document.getElementById("dailyViewLink");
+        const dailyRandomBtn = document.getElementById("dailyRandomBtn");
+        const newsList = document.getElementById("newsList");
 
+        let filteredForDaily = [];
+
+        function getDayOfYear() {
+          const now = new Date();
+          const start = new Date(now.getFullYear(), 0, 0);
+          const diff = now - start;
+          return Math.floor(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function pickDailyWord() {
+          if (!filteredForDaily.length) return null;
+          const day = getDayOfYear();
+          const idx = day % filteredForDaily.length;
+          return filteredForDaily[idx];
+        }
+
+        function renderDailyWord(word) {
+          if (!word) {
+            dailyWordBlock.classList.add("word-card--empty");
+            dailyWordBlock.innerHTML = "<p class=\"word-card__placeholder\" id=\"dailyWordText\">尚無單字資料，請先前往「查看單字」。</p><p class=\"word-card__meaning\" id=\"dailyMeaningText\"></p>";
+            dailyCollectBtn.classList.add("is-hidden");
+            dailyViewLink.classList.add("is-hidden");
+            dailyRandomBtn.classList.add("is-hidden");
+            return;
+          }
+          dailyWordBlock.classList.remove("word-card--empty");
+          dailyWordBlock.innerHTML =
+            "<div class=\"word-card__word\" id=\"dailyWordText\">" + (word.word || word.display_word || "—") + "</div>" +
+            "<div class=\"word-card__meaning\" id=\"dailyMeaningText\">" + (word.meaning_short || "—") + "</div>";
+          dailyCollectBtn.classList.remove("is-hidden");
+          dailyViewLink.classList.remove("is-hidden");
+          dailyRandomBtn.classList.remove("is-hidden");
+          dailyViewLink.href = "vocabulary.html?id=" + encodeURIComponent(word.id);
+          dailyCollectBtn.textContent = typeof isSavedWord !== "undefined" && isSavedWord(word.id) ? "已收藏" : "收藏";
+          dailyCollectBtn.onclick = function () {
+            if (typeof toggleSavedWord !== "undefined") {
+              toggleSavedWord(word.id);
+              dailyCollectBtn.textContent = isSavedWord(word.id) ? "已收藏" : "收藏";
+            }
+          };
+        }
+
+        function loadWordsForDaily() {
+          Promise.all([
+            fetch("words.json").then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("無法載入 words.json")); }),
+            fetch("word_tags.json").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+          ])
+            .then(function (results) {
+              var words = results[0] || [];
+              var tags = results[1] || [];
+              var tagsByWordId = {};
+              tags.forEach(function (t) {
+                if (!tagsByWordId[t.word_id]) tagsByWordId[t.word_id] = [];
+                tagsByWordId[t.word_id].push(t);
+              });
+              var daily = typeof getDailyWordFilter !== "undefined" ? getDailyWordFilter() : null;
+              var def = typeof getDefaultFilter !== "undefined" ? getDefaultFilter() : null;
+              var langArr = (daily && daily.language && daily.language.length) ? daily.language : (def && def.language) || [];
+              var levelArr = (daily && daily.level && daily.level.length) ? daily.level : (def && def.level) || [];
+              var catArr = (daily && daily.category && daily.category.length) ? daily.category : [];
+              filteredForDaily = words.filter(function (w) {
+                if (w.published !== "TRUE") return false;
+                var wordTags = tagsByWordId[w.id] || [];
+                var groups = { language: [], level: [], category: [] };
+                wordTags.forEach(function (t) {
+                  if (groups[t.tag_group]) groups[t.tag_group].push(t);
+                });
+                if (langArr.length && !groups.language.some(function (t) { return langArr.indexOf(t.tag_key) >= 0; })) return false;
+                if (levelArr.length && !groups.level.some(function (t) { return levelArr.indexOf(t.tag_key) >= 0; })) return false;
+                if (catArr.length && !groups.category.some(function (t) { return catArr.indexOf(t.tag_key) >= 0; })) return false;
+                return true;
+              });
+              var dailyWord = pickDailyWord();
+              renderDailyWord(dailyWord);
+            })
+            .catch(function () {
+              dailyWordBlock.classList.add("word-card--empty");
+              dailyWordBlock.innerHTML = "<p class=\"word-card__placeholder\" id=\"dailyWordText\">載入失敗。</p><p class=\"word-card__meaning\" id=\"dailyMeaningText\"></p>";
+              dailyCollectBtn.classList.add("is-hidden");
+              dailyViewLink.classList.add("is-hidden");
+              dailyRandomBtn.classList.add("is-hidden");
+            });
+        }
+
+        if (dailyRandomBtn) {
+          dailyRandomBtn.addEventListener("click", function () {
+            if (!filteredForDaily.length) return;
+            var idx = Math.floor(Math.random() * filteredForDaily.length);
+            renderDailyWord(filteredForDaily[idx]);
+          });
+        }
+
+        fetch("news.json")
+          .then(function (r) {
+            return r.ok ? r.json() : [];
+          })
+          .then(function (items) {
+            newsList.innerHTML = "";
+            if (!items || !items.length) {
+              newsList.innerHTML = "<li>目前沒有更新訊息。</li>";
+              return;
+            }
+            items.slice(0, 10).forEach(function (item) {
+              var li = document.createElement("li");
+              li.textContent = (item.date || "") + " " + (item.text || "");
+              newsList.appendChild(li);
+            });
+          })
+          .catch(function () {
+            newsList.innerHTML = "<li>無法載入更新訊息。</li>";
+          });
+
+        loadWordsForDaily();
+      })();
+    </script>
+  </body>
+</html>

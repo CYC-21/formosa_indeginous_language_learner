@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="page-index" lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>族語小幫手｜我的單字</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&family=Noto+Sans+TC:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="page-saved">
+    <header class="app-header">
+      <button
+        class="header-hamburger"
+        type="button"
+        aria-label="開啟選單"
+        aria-expanded="false"
+        aria-controls="navDrawer"
+        id="navHamburger"
+      >
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div class="app-header__title">
+        <span class="app-title">族語單字小幫手</span>
+      </div>
+    </header>
+
+    <div id="navDrawer" class="nav-drawer" aria-hidden="true">
+      <div class="nav-drawer__backdrop" id="navDrawerBackdrop" aria-hidden="true"></div>
+      <nav class="nav-drawer__panel" aria-label="主要導覽">
+        <a href="index.html">首頁</a>
+        <a href="vocabulary.html">所有單字</a>
+        <a href="saved.html" class="is-current">我的單字</a>
+        <a href="quiz.html">單字測驗</a>
+        <a href="settings.html">設定</a>
+      </nav>
+    </div>
+
+    <nav class="home-nav home-nav--tools" aria-label="頁面工具">
+      <button
+        class="header-btn"
+        id="viewModeToggleBtn"
+        type="button"
+        aria-expanded="false"
+        aria-controls="viewModePanel"
+      >
+        顯示
+      </button>
+      <span class="home-nav__page-title">我的單字</span>
+      <button class="header-btn" id="searchToggleBtn" type="button" aria-expanded="false" aria-controls="searchPanel">
+        篩選
+      </button>
+    </nav>
+
+    <main class="app-main">
+      <section
+        id="viewModePanel"
+        class="view-mode-panel is-collapsed"
+        aria-label="顯示選擇（向下展開）"
+      >
+        <div class="view-mode-panel__inner">
+          <label class="field">
+            <span class="field-label">模式</span>
+            <select id="viewModeSelect" class="select-input">
+              <option value="card">字卡模式</option>
+              <option value="flip">翻牌模式</option>
+              <option value="list">列表模式</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section id="searchPanel" class="search-panel is-collapsed" aria-label="搜尋與篩選（向下展開）">
+        <div class="search-panel__inner">
+          <label class="field">
+            <span class="field-label">關鍵字搜尋</span>
+            <input
+              id="searchInput"
+              type="search"
+              class="text-input"
+              placeholder="輸入：族語／華語"
+              autocomplete="off"
+            />
+          </label>
+
+          <div class="select-grid" aria-label="標籤篩選（下拉可多選）">
+            <div class="field filter-dropdown" id="dropdownLanguage" data-group="language">
+              <span class="field-label">語言（可複選）</span>
+              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+            <div class="field filter-dropdown" id="dropdownLevel" data-group="level">
+              <span class="field-label">級別（可複選）</span>
+              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+            <div class="field filter-dropdown" id="dropdownCategory" data-group="category">
+              <span class="field-label">分類（可複選）</span>
+              <button type="button" class="filter-dropdown__trigger select-input" aria-expanded="false" aria-haspopup="listbox">請選擇</button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-panel" aria-live="polite">
+        <div id="summaryBar" class="summary-bar">
+          <span id="summaryCount">共 0 筆單字</span>
+          <span id="summaryFilters" class="summary-filters"></span>
+        </div>
+
+        <div id="cardView" class="card-view">
+          <div id="card" class="word-card word-card--empty">
+            <div class="word-card__body">
+              <p class="word-card__placeholder">尚無收藏單字，請在「所有單字」或首頁今日單字中收藏。</p>
+            </div>
+          </div>
+          <div class="card-controls">
+            <div class="card-controls__row card-controls__row--nav">
+              <button id="prevCardBtn" class="nav-arrow" disabled aria-label="上一張">◀</button>
+              <button id="randomCardBtn" class="nav-action" disabled>隨機</button>
+              <button id="nextCardBtn" class="nav-arrow" disabled aria-label="下一張">▶</button>
+            </div>
+            <div class="card-controls__row card-controls__row--toggles">
+              <button id="toggleAnswerBtn" class="nav-action nav-action--secondary" disabled>答案</button>
+              <button id="toggleMorphBtn" class="nav-action nav-action--secondary" disabled>構詞</button>
+              <button id="toggleSyllableBtn" class="nav-action nav-action--secondary" disabled>音節</button>
+            </div>
+            <span id="cardIndexLabel" class="card-index-label"></span>
+          </div>
+
+          <div id="flipDefaults" class="flip-defaults is-hidden">
+            <label class="field">
+              <span class="field-label">翻面預設顯示</span>
+              <select id="flipDefaultSelect" class="select-input">
+                <option value="word">族語</option>
+                <option value="meaning">華語</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="listView" class="list-view is-hidden">
+          <div class="table-wrapper">
+            <table class="word-table">
+              <thead>
+                <tr>
+                  <th aria-label="收藏" class="word-table__star-cell"></th>
+                  <th>單字</th>
+                  <th>詞義</th>
+                  <th>語言</th>
+                  <th>級別</th>
+                  <th aria-label="展開同義詞與註解"></th>
+                </tr>
+              </thead>
+              <tbody id="wordTableBody">
+                <!-- 動態插入資料列 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="statusBar" class="status-bar" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>版本：2.0</span>
+      <span aria-hidden="true">｜</span>
+      <a href="index.html" class="app-footer__link">首頁</a>
+      <span aria-hidden="true">｜</span>
+      <a href="about.html" class="app-footer__link">關於族語單字小幫手</a>
+    </footer>
+
+    <script src="js/nav.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,3 +1,9 @@
+/*
+  複製來源：ver 1.0/style.css
+  複製日期：2026-03-13
+  用途：根目錄共用樣式；v1.0 原始檔凍結於 ver 1.0/。此檔可擴充，不刪改既有 v1.0 樣式。
+*/
+
 :root {
   --color-bg: #330202;
   --color-surface: #f2f2f2;
@@ -34,11 +40,11 @@ html.page-index {
   -webkit-overflow-scrolling: touch;
 }
 
+/* 全域字體：漢字與全形用 Noto，半形用 TASA；TASA 在前、Noto 在後，混排時自動依字元選字體 */
 body {
   margin: 0;
   padding: 0;
-  font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: "TASA Orbiter", "Noto Sans TC", system-ui, sans-serif;
   font-optical-sizing: auto;
   background: var(--color-bg);
   color: var(--color-text-on-dark);
@@ -55,8 +61,8 @@ body {
 }
 
 .app-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 0.85rem 0.9rem;
   border-bottom: 1px solid rgba(242, 198, 65, 0.35);
@@ -65,18 +71,142 @@ body {
   gap: 1rem;
 }
 
-.app-header__title {
+.header-hamburger {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid rgba(242, 242, 242, 0.55);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
   align-items: center;
-  flex: 1;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.header-hamburger:hover {
+  background: rgba(242, 198, 65, 0.15);
+  border-color: var(--color-accent-yellow);
+}
+.header-hamburger:active {
+  transform: translateY(0.5px);
+}
+.header-hamburger[aria-expanded="true"] {
+  background: rgba(242, 198, 65, 0.2);
+  border-color: var(--color-accent-yellow);
+}
+
+/* 全站 header 標題：置於整個頁面正中間，全域通用 */
+.app-header__title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .app-title {
   font-weight: 600;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* 區塊標題：與 header 同格式，置於該欄中間（首頁等用） */
+.section-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin: 0 0 0.6rem;
+  color: var(--color-accent-yellow);
+}
+
+/* 漢堡選單抽屜 */
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0.2s ease;
+}
+.nav-drawer.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+.nav-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.nav-drawer.is-open .nav-drawer__backdrop {
+  opacity: 1;
+}
+.nav-drawer__panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: min(280px, 85vw);
+  max-width: 100%;
+  background: var(--color-bg);
+  border-right: 1px solid rgba(242, 198, 65, 0.35);
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+}
+.nav-drawer.is-open .nav-drawer__panel {
+  transform: translateX(0);
+}
+.nav-drawer__panel a {
+  display: block;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-on-dark);
+  text-decoration: none;
+  font-size: 1rem;
+}
+.nav-drawer__panel a:hover {
+  background: rgba(242, 198, 65, 0.2);
+  color: var(--color-accent-yellow);
+}
+.nav-drawer__panel a.is-current {
+  background: rgba(242, 198, 65, 0.15);
+  color: var(--color-accent-yellow);
+  border: 1px solid rgba(242, 198, 65, 0.5);
+}
+
+/* home-nav 作為工具列：顯示（置左）、本頁標題（置中）、篩選（置右） */
+.home-nav--tools {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.9rem;
+}
+.home-nav--tools .header-btn {
+  flex: 0 0 auto;
+}
+.home-nav__page-title {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-on-dark);
+  padding: 0 0.5rem;
 }
 
 .header-btn {
@@ -316,12 +446,45 @@ body {
 }
 
 .word-card__body {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   flex: 1 1 0;
   min-height: 0;
+}
+
+/* 收藏 ★ 按鈕：卡面右上角，黃色，實心＝已收藏、空心＝未收藏 */
+.word-card__star-wrap {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+.word-card__star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-accent-yellow);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.word-card__star:hover {
+  opacity: 0.9;
+}
+.word-card__star:active {
+  transform: scale(0.95);
+}
+.word-card__star[aria-pressed="true"] {
+  text-shadow: 0 0 0.5px var(--color-accent-yellow);
 }
 
 .word-card__top {
@@ -656,6 +819,29 @@ body {
   background: rgba(242, 198, 65, 0.16);
 }
 
+/* 列表第一欄：收藏 ★，黃色實心＝已收藏、空心＝未收藏 */
+.word-table__star-cell {
+  width: 2.25rem;
+  text-align: center;
+  vertical-align: middle;
+}
+.word-table__star {
+  padding: 0.2rem 0.35rem;
+  border: none;
+  background: transparent;
+  color: var(--color-accent-yellow);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.word-table__star:hover {
+  opacity: 0.9;
+}
+.word-table__star[aria-pressed="true"] {
+  text-shadow: 0 0 0.5px var(--color-accent-yellow);
+}
+
 .word-table__toggle-cell {
   width: 2rem;
   text-align: center;
@@ -731,9 +917,307 @@ body {
   display: none;
 }
 
+/* 1.0+ 共用導覽（首頁、vocabulary、saved、quiz） */
+.home-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.4rem 0.9rem;
+  border-bottom: 1px solid rgba(242, 242, 242, 0.2);
+}
+.home-nav a {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 242, 242, 0.55);
+  color: var(--color-text-on-dark);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.home-nav a:hover {
+  background: rgba(242, 198, 65, 0.2);
+  border-color: var(--color-accent-yellow);
+}
+.home-nav a.is-current {
+  border-color: rgba(242, 198, 65, 0.7);
+  background: rgba(242, 198, 65, 0.15);
+  color: var(--color-accent-yellow);
+}
+
+/* ========== Quiz 頁 ========== */
+/* 設定頁區塊 */
+.settings-main {
+  padding: 0 0.9rem 1rem;
+}
+.settings-section {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(242, 242, 242, 0.35);
+  background: rgba(242, 242, 242, 0.08);
+  padding: 1.1rem 1rem;
+  margin-bottom: 0.9rem;
+}
+.settings-desc {
+  font-size: 0.9rem;
+  color: rgba(242, 242, 242, 0.85);
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+.settings-actions {
+  margin-top: 0.9rem;
+}
+
+.quiz-section {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(242, 242, 242, 0.35);
+  background: rgba(242, 242, 242, 0.08);
+  padding: 1.1rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.quiz-setup__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.20rem;
+  margin-bottom: 0.25rem;
+}
+
+.quiz-setup__actions,
+.quiz-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quiz-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+
+.quiz-btn--primary {
+  background: var(--color-accent-yellow);
+  color: var(--color-bg);
+  border-color: var(--color-accent-yellow);
+}
+
+.quiz-btn--primary:hover {
+  filter: brightness(1.05);
+}
+
+.quiz-btn--secondary {
+  background: transparent;
+  color: var(--color-accent-yellow);
+  border-color: rgba(242, 198, 65, 0.9);
+}
+
+.quiz-btn--secondary:hover {
+  background: rgba(242, 198, 65, 0.15);
+}
+
+.quiz-progress {
+  font-size: 0.9rem;
+  color: rgba(242, 242, 242, 0.85);
+  margin-bottom: 0.75rem;
+}
+
+.quiz-question {
+  margin-bottom: 1rem;
+}
+
+/* 題目以字卡格式呈現（與單字卡視覺一致） */
+.quiz-question-card {
+  border-radius: 0.8rem;
+  border: none;
+  padding: 1.8rem 1.4rem;
+  background: var(--color-surface);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-question-card__prompt {
+  font-size: min(2.5rem, 12vw);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--color-text-on-light);
+  font-family: "TASA Orbiter", "Noto Sans TC", sans-serif;
+  font-optical-sizing: auto;
+  max-width: 100%;
+  margin: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quiz-option {
+  padding: 0.7rem 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(242, 242, 242, 0.55);
+  background: rgba(242, 242, 242, 0.1);
+  color: var(--color-text-on-dark);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.quiz-option:hover:not(:disabled) {
+  background: rgba(242, 198, 65, 0.2);
+  border-color: var(--color-accent-yellow);
+}
+
+.quiz-option:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.quiz-option--selected {
+  background: rgba(242, 198, 65, 0.25);
+  border-color: var(--color-accent-yellow);
+}
+
+.quiz-confirm-wrap {
+  margin-top: 1rem;
+}
+
+.quiz-confirm-wrap.is-hidden {
+  display: none;
+}
+
+.quiz-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quiz-input-block .text-input {
+  width: 100%;
+}
+
+.quiz-feedback {
+  margin: 0.75rem 0;
+  font-size: 1rem;
+  padding: 0.5rem 0;
+}
+
+.quiz-feedback--correct {
+  color: var(--color-meaning);
+}
+
+.quiz-feedback--wrong {
+  color: var(--color-error);
+}
+
+.quiz-next-wrap {
+  margin-top: 0.5rem;
+}
+
+.quiz-result__score {
+  font-size: 1.35rem;
+  color: var(--color-accent-yellow);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.quiz-result-list {
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.quiz-result-item {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(242, 242, 242, 0.25);
+  background: rgba(242, 242, 242, 0.06);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.quiz-result-item__row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.quiz-result-item__row:first-child {
+  margin-top: 0;
+}
+
+.quiz-result-item__num {
+  flex-shrink: 0;
+  color: rgba(242, 242, 242, 0.7);
+}
+
+.quiz-result-item__prompt {
+  color: var(--color-text-on-dark);
+}
+
+.quiz-result-item__answer {
+  padding-left: 1.2rem;
+}
+
+.quiz-result-item__label {
+  flex-shrink: 0;
+  color: rgba(242, 242, 242, 0.8);
+}
+
+.quiz-result-item__correct {
+  color: var(--color-meaning);
+  font-weight: 500;
+}
+
+.quiz-result-item__wrong {
+  color: var(--color-error);
+  font-size: 0.85em;
+}
+
+.quiz-result-item__mark {
+  flex: 1;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--color-meaning);
+}
+
+.quiz-result-item__mark--wrong {
+  color: var(--color-error);
+}
+
+.quiz-result-item .quiz-result-star {
+  padding: 0.2rem 0.4rem;
+  border: none;
+  background: transparent;
+  color: var(--color-accent-yellow);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quiz-result-item .quiz-result-star:hover {
+  opacity: 0.9;
+}
+
 @media (max-width: 768px) {
   .select-grid {
     grid-template-columns: 1fr;
   }
 }
-
