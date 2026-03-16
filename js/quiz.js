@@ -8,9 +8,11 @@
   const quizResult = document.getElementById("quizResult");
   const quizCount = document.getElementById("quizCount");
   const quizSource = document.getElementById("quizSource");
-  const quizFilterLanguage = document.getElementById("quizFilterLanguage");
-  const quizFilterLevel = document.getElementById("quizFilterLevel");
-  const quizFilterCategory = document.getElementById("quizFilterCategory");
+  const quizCountDropdown = document.getElementById("quizCountDropdown");
+  const quizSourceDropdown = document.getElementById("quizSourceDropdown");
+  const quizDropdownLanguage = document.getElementById("quizDropdownLanguage");
+  const quizDropdownLevel = document.getElementById("quizDropdownLevel");
+  const quizDropdownCategory = document.getElementById("quizDropdownCategory");
   const quizStartBtn = document.getElementById("quizStartBtn");
   const quizProgressText = document.getElementById("quizProgressText");
   const quizQuestionBlock = document.getElementById("quizQuestionBlock");
@@ -28,6 +30,11 @@
   let allWords = [];
   let allTags = [];
   let enrichedWords = [];
+  let quizFilters = {
+    language: [],
+    level: [],
+    category: [],
+  };
   let pool = [];
   /** 供選項用：同語言、同分類，級別不限（不足時從其他級別取） */
   let optionPool = [];
@@ -72,20 +79,57 @@
       var savedIds = getSavedWords();
       base = base.filter(function (e) { return savedIds.indexOf(String(e.word.id)) >= 0; });
     }
-    var lang = (quizFilterLanguage && quizFilterLanguage.value) ? String(quizFilterLanguage.value).trim() : "";
-    var lv = (quizFilterLevel && quizFilterLevel.value) ? String(quizFilterLevel.value).trim() : "";
-    var cat = (quizFilterCategory && quizFilterCategory.value) ? String(quizFilterCategory.value).trim() : "";
+    var langArr = Array.isArray(quizFilters.language)
+      ? quizFilters.language
+      : quizFilters.language
+      ? [quizFilters.language]
+      : [];
+    var lvArr = Array.isArray(quizFilters.level)
+      ? quizFilters.level
+      : quizFilters.level
+      ? [quizFilters.level]
+      : [];
+    var catArr = Array.isArray(quizFilters.category)
+      ? quizFilters.category
+      : quizFilters.category
+      ? [quizFilters.category]
+      : [];
     var baseStrict = base.filter(function (e) {
       var w = e;
-      if (lang && !(w._tagGroups.language || []).some(function (t) { return t.tag_key === lang; })) return false;
-      if (lv && !(w._tagGroups.level || []).some(function (t) { return t.tag_key === lv; })) return false;
-      if (cat && !(w._tagGroups.category || []).some(function (t) { return t.tag_key === cat; })) return false;
+      if (langArr.length > 0) {
+        var hasLang = (w._tagGroups.language || []).some(function (t) {
+          return langArr.indexOf(t.tag_key) >= 0;
+        });
+        if (!hasLang) return false;
+      }
+      if (lvArr.length > 0) {
+        var hasLevel = (w._tagGroups.level || []).some(function (t) {
+          return lvArr.indexOf(t.tag_key) >= 0;
+        });
+        if (!hasLevel) return false;
+      }
+      if (catArr.length > 0) {
+        var hasCat = (w._tagGroups.category || []).some(function (t) {
+          return catArr.indexOf(t.tag_key) >= 0;
+        });
+        if (!hasCat) return false;
+      }
       return true;
     });
     var baseOption = base.filter(function (e) {
       var w = e;
-      if (lang && !(w._tagGroups.language || []).some(function (t) { return t.tag_key === lang; })) return false;
-      if (cat && !(w._tagGroups.category || []).some(function (t) { return t.tag_key === cat; })) return false;
+      if (langArr.length > 0) {
+        var hasLang = (w._tagGroups.language || []).some(function (t) {
+          return langArr.indexOf(t.tag_key) >= 0;
+        });
+        if (!hasLang) return false;
+      }
+      if (catArr.length > 0) {
+        var hasCat = (w._tagGroups.category || []).some(function (t) {
+          return catArr.indexOf(t.tag_key) >= 0;
+        });
+        if (!hasCat) return false;
+      }
       return true;
     });
     pool = baseStrict.map(function (e) { return e.word; });
@@ -100,26 +144,102 @@
       if (!groups[tag.tag_group]) return;
       if (!groups[tag.tag_group][tag.tag_key]) groups[tag.tag_group][tag.tag_key] = tag.tag_label;
     });
-    function fillSelect(el, groupKey) {
-      if (!el) return;
+
+    var defaultFilter = typeof getDefaultFilter !== "undefined" ? getDefaultFilter() : null;
+    if (defaultFilter) {
+      if (defaultFilter.language && defaultFilter.language.length) {
+        quizFilters.language = defaultFilter.language.slice();
+      }
+      if (defaultFilter.level && defaultFilter.level.length) {
+        quizFilters.level = defaultFilter.level.slice();
+      }
+    }
+
+    function setupDropdown(container, groupKey) {
+      if (!container) return;
       var map = groups[groupKey] || {};
+      var trigger = container.querySelector(".filter-dropdown__trigger");
+      var panel = container.querySelector(".filter-dropdown__panel");
+      if (!trigger || !panel) return;
+
+      panel.innerHTML = "";
+      var allOpt = document.createElement("div");
+      allOpt.className = "filter-dropdown__option";
+      allOpt.setAttribute("data-value", "");
+      allOpt.setAttribute("role", "option");
+      allOpt.textContent = "全部";
+      panel.appendChild(allOpt);
+
       var entries = Object.keys(map).map(function (k) { return [k, map[k]]; });
       entries.sort(function (a, b) { return (a[1] || "").localeCompare(b[1] || "", "zh-Hant"); });
-      el.innerHTML = "";
-      var optAll = document.createElement("option");
-      optAll.value = "";
-      optAll.textContent = "全部";
-      el.appendChild(optAll);
       entries.forEach(function (kv) {
-        var o = document.createElement("option");
-        o.value = kv[0];
-        o.textContent = kv[1];
-        el.appendChild(o);
+        var opt = document.createElement("div");
+        opt.className = "filter-dropdown__option";
+        opt.setAttribute("data-value", kv[0]);
+        opt.setAttribute("role", "option");
+        opt.textContent = kv[1];
+        panel.appendChild(opt);
       });
+
+      function updateTriggerAndOptions() {
+        var selected = quizFilters[groupKey] || [];
+        var arr = Array.isArray(selected) ? selected : [selected].filter(Boolean);
+        if (arr.length === 0) {
+          trigger.textContent = "請選擇";
+        } else if (arr.length === 1) {
+          var label = map[arr[0]] || arr[0];
+          trigger.textContent = label;
+        } else {
+          trigger.textContent = "已選 " + arr.length + " 項";
+        }
+        var set = new Set(arr);
+        panel.querySelectorAll(".filter-dropdown__option").forEach(function (o) {
+          var v = o.getAttribute("data-value");
+          o.classList.toggle("is-selected", v ? set.has(v) : set.size === 0);
+        });
+      }
+
+      trigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = !panel.hidden;
+        panel.hidden = isOpen;
+        trigger.setAttribute("aria-expanded", (!isOpen).toString());
+        if (!isOpen) updateTriggerAndOptions();
+      });
+
+      panel.querySelectorAll(".filter-dropdown__option").forEach(function (opt) {
+        opt.addEventListener("click", function () {
+          var value = opt.getAttribute("data-value");
+          var arr = quizFilters[groupKey] || [];
+          arr = Array.isArray(arr) ? arr.slice() : [arr].filter(Boolean);
+          if (value === "") {
+            quizFilters[groupKey] = [];
+          } else {
+            var idx = arr.indexOf(value);
+            if (idx >= 0) arr.splice(idx, 1);
+            else arr.push(value);
+            quizFilters[groupKey] = arr;
+          }
+          updateTriggerAndOptions();
+        });
+      });
+
+      updateTriggerAndOptions();
     }
-    fillSelect(quizFilterLanguage, "language");
-    fillSelect(quizFilterLevel, "level");
-    fillSelect(quizFilterCategory, "category");
+
+    setupDropdown(quizDropdownLanguage, "language");
+    setupDropdown(quizDropdownLevel, "level");
+    setupDropdown(quizDropdownCategory, "category");
+
+    document.addEventListener("click", function (e) {
+      if (e.target.closest(".filter-dropdown")) return;
+      document.querySelectorAll(".filter-dropdown__panel").forEach(function (p) {
+        p.hidden = true;
+      });
+      document.querySelectorAll(".filter-dropdown__trigger").forEach(function (t) {
+        t.setAttribute("aria-expanded", "false");
+      });
+    });
   }
 
   /** 題目可為同一單字的族語題與華語題各一；以 (word, direction) 槽位洗牌取前 N 題。 */
@@ -358,6 +478,79 @@
     });
   }
 
+  // 測驗設定：題數與題庫改用自訂 dropdown，與隱藏 select 同步
+  if (quizCountDropdown && quizCount) {
+    var countTrigger = quizCountDropdown.querySelector(".filter-dropdown__trigger");
+    var countPanel = quizCountDropdown.querySelector(".filter-dropdown__panel");
+    if (countTrigger && countPanel) {
+      function updateCountTrigger() {
+        var val = quizCount.value || "10";
+        var map = { "5": "5 題", "10": "10 題", "15": "15 題" };
+        countTrigger.textContent = map[val] || "10 題";
+        countPanel.querySelectorAll(".filter-dropdown__option").forEach(function (opt) {
+          var v = opt.getAttribute("data-value");
+          opt.classList.toggle("is-selected", v === val);
+        });
+      }
+      countTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = !countPanel.hidden;
+        countPanel.hidden = isOpen;
+        countTrigger.setAttribute("aria-expanded", (!isOpen).toString());
+        if (!isOpen) updateCountTrigger();
+      });
+      countPanel.querySelectorAll(".filter-dropdown__option").forEach(function (opt) {
+        opt.addEventListener("click", function () {
+          var v = opt.getAttribute("data-value");
+          if (!v) return;
+          if (quizCount.value !== v) {
+            quizCount.value = v;
+          }
+          updateCountTrigger();
+          countPanel.hidden = true;
+          countTrigger.setAttribute("aria-expanded", "false");
+        });
+      });
+      updateCountTrigger();
+    }
+  }
+
+  if (quizSourceDropdown && quizSource) {
+    var sourceTrigger = quizSourceDropdown.querySelector(".filter-dropdown__trigger");
+    var sourcePanel = quizSourceDropdown.querySelector(".filter-dropdown__panel");
+    if (sourceTrigger && sourcePanel) {
+      function updateSourceTrigger() {
+        var val = quizSource.value || "all";
+        var map = { all: "全部單字", saved: "我的單字" };
+        sourceTrigger.textContent = map[val] || "全部單字";
+        sourcePanel.querySelectorAll(".filter-dropdown__option").forEach(function (opt) {
+          var v = opt.getAttribute("data-value");
+          opt.classList.toggle("is-selected", v === val);
+        });
+      }
+      sourceTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = !sourcePanel.hidden;
+        sourcePanel.hidden = isOpen;
+        sourceTrigger.setAttribute("aria-expanded", (!isOpen).toString());
+        if (!isOpen) updateSourceTrigger();
+      });
+      sourcePanel.querySelectorAll(".filter-dropdown__option").forEach(function (opt) {
+        opt.addEventListener("click", function () {
+          var v = opt.getAttribute("data-value");
+          if (!v) return;
+          if (quizSource.value !== v) {
+            quizSource.value = v;
+          }
+          updateSourceTrigger();
+          sourcePanel.hidden = true;
+          sourceTrigger.setAttribute("aria-expanded", "false");
+        });
+      });
+      updateSourceTrigger();
+    }
+  }
+
   Promise.all([
     fetch("words.json").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
     fetch("word_tags.json").then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
@@ -366,10 +559,5 @@
     allTags = results[1] || [];
     enrichWordsForQuiz();
     fillFilterDropdowns();
-    var def = typeof getDefaultFilter !== "undefined" ? getDefaultFilter() : null;
-    if (def) {
-      if (quizFilterLanguage && def.language && def.language.length) quizFilterLanguage.value = def.language[0];
-      if (quizFilterLevel && def.level && def.level.length) quizFilterLevel.value = def.level[0];
-    }
   });
 })();

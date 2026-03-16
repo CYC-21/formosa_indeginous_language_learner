@@ -802,6 +802,83 @@ if (viewModeSelect) {
   });
 }
 
+// 我的單字／所有單字：顯示模式與翻面預設改用自訂 dropdown，同步到隱藏的 select
+const viewModeDropdown = document.getElementById("viewModeDropdown");
+if (viewModeDropdown && viewModeSelect) {
+  const trigger = viewModeDropdown.querySelector(".filter-dropdown__trigger");
+  const panel = viewModeDropdown.querySelector(".filter-dropdown__panel");
+  if (trigger && panel) {
+    function updateViewModeTrigger() {
+      const val = viewModeSelect.value || "card";
+      const map = { card: "字卡模式", flip: "翻牌模式", list: "列表模式" };
+      trigger.textContent = map[val] || "字卡模式";
+      panel.querySelectorAll(".filter-dropdown__option").forEach((opt) => {
+        const v = opt.getAttribute("data-value");
+        opt.classList.toggle("is-selected", v === val);
+      });
+    }
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      trigger.setAttribute("aria-expanded", (!isOpen).toString());
+      if (!isOpen) updateViewModeTrigger();
+    });
+    panel.querySelectorAll(".filter-dropdown__option").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        const v = opt.getAttribute("data-value");
+        if (!v) return;
+        if (viewModeSelect.value !== v) {
+          viewModeSelect.value = v;
+          viewModeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        updateViewModeTrigger();
+        panel.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+      });
+    });
+    updateViewModeTrigger();
+  }
+}
+
+const flipDefaultDropdown = document.getElementById("flipDefaultDropdown");
+if (flipDefaultDropdown && flipDefaultSelect) {
+  const trigger = flipDefaultDropdown.querySelector(".filter-dropdown__trigger");
+  const panel = flipDefaultDropdown.querySelector(".filter-dropdown__panel");
+  if (trigger && panel) {
+    function updateFlipTrigger() {
+      const val = flipDefaultSelect.value || "word";
+      const map = { word: "族語", meaning: "華語" };
+      trigger.textContent = map[val] || "族語";
+      panel.querySelectorAll(".filter-dropdown__option").forEach((opt) => {
+        const v = opt.getAttribute("data-value");
+        opt.classList.toggle("is-selected", v === val);
+      });
+    }
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      trigger.setAttribute("aria-expanded", (!isOpen).toString());
+      if (!isOpen) updateFlipTrigger();
+    });
+    panel.querySelectorAll(".filter-dropdown__option").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        const v = opt.getAttribute("data-value");
+        if (!v) return;
+        if (flipDefaultSelect.value !== v) {
+          flipDefaultSelect.value = v;
+          flipDefaultSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        updateFlipTrigger();
+        panel.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+      });
+    });
+    updateFlipTrigger();
+  }
+}
+
 if (prevCardBtn) {
   prevCardBtn.addEventListener("click", () => {
     if (!state.filteredWords.length) return;

@@ -71,7 +71,22 @@
         <div class="view-mode-panel__inner">
           <label class="field">
             <span class="field-label">模式</span>
-            <select id="viewModeSelect" class="select-input">
+            <div class="filter-dropdown" id="viewModeDropdown">
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                字卡模式
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="false" hidden>
+                <div class="filter-dropdown__option" data-value="card" role="option">字卡模式</div>
+                <div class="filter-dropdown__option" data-value="flip" role="option">翻牌模式</div>
+                <div class="filter-dropdown__option" data-value="list" role="option">列表模式</div>
+              </div>
+            </div>
+            <select id="viewModeSelect" class="select-input visually-hidden">
               <option value="card">字卡模式</option>
               <option value="flip">翻牌模式</option>
               <option value="list">列表模式</option>
@@ -142,7 +157,21 @@
           <div id="flipDefaults" class="flip-defaults is-hidden">
             <label class="field">
               <span class="field-label">翻面預設顯示</span>
-              <select id="flipDefaultSelect" class="select-input">
+              <div class="filter-dropdown" id="flipDefaultDropdown">
+                <button
+                  type="button"
+                  class="filter-dropdown__trigger select-input"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                >
+                  族語
+                </button>
+                <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="false" hidden>
+                  <div class="filter-dropdown__option" data-value="word" role="option">族語</div>
+                  <div class="filter-dropdown__option" data-value="meaning" role="option">華語</div>
+                </div>
+              </div>
+              <select id="flipDefaultSelect" class="select-input visually-hidden">
                 <option value="word">族語</option>
                 <option value="meaning">華語</option>
               </select>
@@ -175,7 +204,7 @@
     </main>
 
     <footer class="app-footer">
-      <span>版本：2.1</span>
+      <span>版本：2.2</span>
       <span aria-hidden="true">｜</span>
       <a href="index.html" class="app-footer__link">首頁</a>
       <span aria-hidden="true">｜</span>

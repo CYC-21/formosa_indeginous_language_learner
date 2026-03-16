@@ -46,7 +46,22 @@
         <div class="quiz-setup__fields">
           <label class="field">
             <span class="field-label">題數</span>
-            <select id="quizCount" class="select-input">
+            <div class="filter-dropdown" id="quizCountDropdown">
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                10 題
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="false" hidden>
+                <div class="filter-dropdown__option" data-value="5" role="option">5 題</div>
+                <div class="filter-dropdown__option" data-value="10" role="option">10 題</div>
+                <div class="filter-dropdown__option" data-value="15" role="option">15 題</div>
+              </div>
+            </div>
+            <select id="quizCount" class="select-input visually-hidden">
               <option value="5">5 題</option>
               <option value="10" selected>10 題</option>
               <option value="15">15 題</option>
@@ -54,29 +69,63 @@
           </label>
           <label class="field">
             <span class="field-label">題庫</span>
-            <select id="quizSource" class="select-input">
+            <div class="filter-dropdown" id="quizSourceDropdown">
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                全部單字
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="false" hidden>
+                <div class="filter-dropdown__option" data-value="all" role="option">全部單字</div>
+                <div class="filter-dropdown__option" data-value="saved" role="option">我的單字</div>
+              </div>
+            </div>
+            <select id="quizSource" class="select-input visually-hidden">
               <option value="all">全部單字</option>
               <option value="saved">我的單字</option>
             </select>
           </label>
-          <label class="field">
-            <span class="field-label">語言別</span>
-            <select id="quizFilterLanguage" class="select-input">
-              <option value="">全部</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="field-label">級別</span>
-            <select id="quizFilterLevel" class="select-input">
-              <option value="">全部</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="field-label">分類</span>
-            <select id="quizFilterCategory" class="select-input">
-              <option value="">全部</option>
-            </select>
-          </label>
+          <div class="select-grid" aria-label="題庫篩選（可複選）">
+            <div class="field filter-dropdown" id="quizDropdownLanguage" data-group="language">
+              <span class="field-label">語言別（可複選）</span>
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                請選擇
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+            <div class="field filter-dropdown" id="quizDropdownLevel" data-group="level">
+              <span class="field-label">級別（可複選）</span>
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                請選擇
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+            <div class="field filter-dropdown" id="quizDropdownCategory" data-group="category">
+              <span class="field-label">分類（可複選）</span>
+              <button
+                type="button"
+                class="filter-dropdown__trigger select-input"
+                aria-expanded="false"
+                aria-haspopup="listbox"
+              >
+                請選擇
+              </button>
+              <div class="filter-dropdown__panel" role="listbox" aria-multiselectable="true" hidden></div>
+            </div>
+          </div>
         </div>
         <div class="quiz-setup__actions">
           <button type="button" id="quizStartBtn" class="quiz-btn quiz-btn--primary">開始測驗</button>
@@ -119,7 +168,7 @@
     </main>
 
     <footer class="app-footer">
-      <span>版本：2.1</span>
+      <span>版本：2.2</span>
       <span aria-hidden="true">｜</span>
       <a href="index.html" class="app-footer__link">首頁</a>
       <span aria-hidden="true">｜</span>
