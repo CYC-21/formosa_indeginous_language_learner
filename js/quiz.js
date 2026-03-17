@@ -116,6 +116,7 @@
       }
       return true;
     });
+    /* 選項池：僅依語言篩選，級別與分類不限制，以利湊足四選項 */
     var baseOption = base.filter(function (e) {
       var w = e;
       if (langArr.length > 0) {
@@ -123,12 +124,6 @@
           return langArr.indexOf(t.tag_key) >= 0;
         });
         if (!hasLang) return false;
-      }
-      if (catArr.length > 0) {
-        var hasCat = (w._tagGroups.category || []).some(function (t) {
-          return catArr.indexOf(t.tag_key) >= 0;
-        });
-        if (!hasCat) return false;
       }
       return true;
     });
@@ -260,10 +255,45 @@
     });
   }
 
-  /** 取得錯誤選項（同義不重複）；來源為 optionPool（同語言、同分類、級別不限）。每題固定 4 選項，不足時以重複補滿。 */
+  /**
+   * 陷阱答案：正確答案做母音替換（a,i,e,o,u），o 與 u 不得互換。
+   * 僅用於族語（field === "word"）。回傳至多 maxCount 個不重複且不等於 correctValue 的變體。
+   */
+  function generateTrapAnswers(correctValue, field, maxCount) {
+    if (field !== "word" || !correctValue || maxCount <= 0) return [];
+    var vowels = "aieou";
+    var positions = [];
+    for (var i = 0; i < correctValue.length; i++) {
+      var c = correctValue[i].toLowerCase();
+      if (vowels.indexOf(c) >= 0) positions.push(i);
+    }
+    if (positions.length === 0) return [];
+    for (var j = positions.length - 1; j > 0; j--) {
+      var r = Math.floor(Math.random() * (j + 1));
+      var t = positions[j]; positions[j] = positions[r]; positions[r] = t;
+    }
+    var result = [];
+    for (var p = 0; p < positions.length && result.length < maxCount; p++) {
+      var idx = positions[p];
+      var ch = correctValue[idx];
+      var cl = ch.toLowerCase();
+      var allowed = cl === "o" ? ["a", "i", "e"] : cl === "u" ? ["a", "i", "e"] : ["a", "i", "e", "o", "u"];
+      var repl = allowed[Math.floor(Math.random() * allowed.length)];
+      if (ch === ch.toUpperCase()) repl = repl.toUpperCase();
+      var variant = correctValue.slice(0, idx) + repl + correctValue.slice(idx + 1);
+      if (variant !== correctValue && result.indexOf(variant) < 0) result.push(variant);
+    }
+    return result;
+  }
+
+  /** 取得錯誤選項（含陷阱答案＋同義不重複）；每題固定 4 選項，不足時以重複補滿。 */
   function getWrongOptions(correctValue, field, count, currentWord) {
     var values = [];
     var correctMeaning = currentWord ? (currentWord.meaning_short || currentWord.meaning_full || "").trim() : "";
+    var traps = generateTrapAnswers(correctValue, field, 1);
+    traps.forEach(function (v) {
+      if (v && v !== correctValue && values.indexOf(v) < 0) values.push(v);
+    });
     var source = optionPool.length > 0 ? optionPool : pool;
     var poolCopy = source.slice();
     var attempts = poolCopy.length * 2;
