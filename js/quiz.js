@@ -290,7 +290,11 @@
   function getWrongOptions(correctValue, field, count, currentWord) {
     var values = [];
     var correctMeaning = currentWord ? (currentWord.meaning_short || currentWord.meaning_full || "").trim() : "";
-    var traps = generateTrapAnswers(correctValue, field, 1);
+    // 陷阱題規則：每題至多 1 個，也可以 0 個（隨機決定是否加入）
+    var traps = [];
+    if (field === "word" && Math.random() < 0.5) {
+      traps = generateTrapAnswers(correctValue, field, 1);
+    }
     traps.forEach(function (v) {
       if (v && v !== correctValue && values.indexOf(v) < 0) values.push(v);
     });

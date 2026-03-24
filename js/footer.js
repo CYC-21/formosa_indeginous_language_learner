@@ -5,7 +5,7 @@
   var el = document.getElementById("app-footer-placeholder");
   if (!el) return;
   el.innerHTML =
-    '<span>版本：2.3</span>' +
+    '<span>版本：2.4</span>' +
     '<span aria-hidden="true">｜</span>' +
     '<a href="index.html" class="app-footer__link">首頁</a>' +
     '<span aria-hidden="true">｜</span>' +
