@@ -236,6 +236,7 @@ body {
   border-radius: 0.9rem;
   border: 1px solid rgba(242, 242, 242, 0.35);
   background: rgba(242, 242, 242, 0.08);
+  overflow: visible;
   max-height: 120px;
   transition: max-height 0.2s ease, opacity 0.2s ease;
 }
@@ -244,6 +245,8 @@ body {
   max-height: 0;
   border-color: transparent;
   opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .view-mode-panel__inner {

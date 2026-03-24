@@ -433,15 +433,17 @@ function renderCard() {
       const firstChar = rootForm.slice(0, 1);
       const restChars = rootForm.slice(1);
       const infixText = infixMorph.display_label || infixMorph.form || "";
+      const infixLen = (infixMorph.form || infixText || "").length;
 
-      pieces.push({ text: firstChar, type: "root" });
-      pieces.push({ text: infixText, type: "infix" });
-      pieces.push({ text: restChars, type: "root" });
+      pieces.push({ text: firstChar, type: "root", len: firstChar.length });
+      pieces.push({ text: infixText, type: "infix", len: infixLen });
+      pieces.push({ text: restChars, type: "root", len: restChars.length });
     } else {
       for (const m of morphs) {
         const text = m.display_label || m.form || "";
         if (!text) continue;
-        pieces.push({ text, type: m.morph_type });
+        const logicalLen = (m.form || text).length;
+        pieces.push({ text, type: m.morph_type, len: logicalLen });
       }
     }
 
@@ -457,12 +459,13 @@ function renderCard() {
         const tokenPieces = [];
         while (taken < len && pieceIdx < pieces.length) {
           const p = pieces[pieceIdx];
-          const rest = p.text.length - charInPiece;
+          const rest = (p.len || p.text.length) - charInPiece;
           const need = len - taken;
           if (rest <= need) {
             tokenPieces.push({
               text: p.text.slice(charInPiece),
               type: p.type,
+              len: rest,
             });
             taken += rest;
             pieceIdx++;
@@ -471,6 +474,7 @@ function renderCard() {
             tokenPieces.push({
               text: p.text.slice(charInPiece, charInPiece + need),
               type: p.type,
+              len: need,
             });
             taken += need;
             charInPiece += need;
@@ -480,17 +484,20 @@ function renderCard() {
       }
       baseWordHtml = tokenPiecesList
         .map(
-          (tps, i) =>
-            `<span class="word-token" style="--token-scale: ${getTokenScale(tokenLengths[i])}">${tps
+          (tps) => {
+            // 構詞模式：縮放字數以實際顯示字元計（含 -、~ 等符號）
+            const displayLen = tps.reduce((sum, p) => sum + (p.text || "").length, 0);
+            return `<span class="word-token" style="--token-scale: ${getTokenScale(displayLen)}">${tps
               .map(
                 (p) =>
                   `<span class="morph-inline morph-inline--${p.type}">${p.text}</span>`
               )
-              .join("")}</span>`
+              .join("")}</span>`;
+          }
         )
         .join(" ");
     } else {
-      const singleLen = pieces.reduce((s, p) => s + p.text.length, 0);
+      const singleLen = pieces.reduce((s, p) => s + (p.len || p.text.length), 0);
       baseWordHtml = `<span class="word-token" style="--token-scale: ${getTokenScale(singleLen)}">${pieces
         .map(
           (p) =>
